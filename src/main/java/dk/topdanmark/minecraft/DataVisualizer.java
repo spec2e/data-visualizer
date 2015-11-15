@@ -1,31 +1,27 @@
 package dk.topdanmark.minecraft;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DataVisualizer extends JavaPlugin implements Listener {
 
-    private static Map<String, Player> playerList = new HashMap();
+    private static Player player;
 
     private static ServerSocket socket;
 
@@ -52,7 +48,7 @@ public class DataVisualizer extends JavaPlugin implements Listener {
                     System.out.println("Waiting for clients to connect...");
                     while (true) {
                         Socket clientSocket = serverSocket.accept();
-                        commandProcessingPool.submit(new CommandExecutor(clientSocket));
+                        commandProcessingPool.submit(new CommandExecutor(clientSocket, player));
                     }
                 } catch (IOException e) {
                     System.err.println("Unable to process client request");
@@ -67,24 +63,37 @@ public class DataVisualizer extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("basic")) {
-            getLogger().info("/basic command was entered!");
+        if (cmd.getName().equalsIgnoreCase("sheep")) {
+            getLogger().info("/sheep command was entered!");
+
+            Location location = player.getLocation();
+            location.setZ(location.getZ() + 5);
+            location.setY(location.getY() + 10);
+            player.getWorld().spawn(location, Sheep.class);
+
             return true;
         }
         return false;
     }
 
 
-    @EventHandler
+    //@EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        getLogger().info("DataVisualizer.onPlayerMove");
+        //getLogger().info("DataVisualizer.onPlayerMove");
         // Get the player's location.
         Location loc = event.getPlayer().getLocation();
         // Sets loc to five above where it used to be. Note that this doesn't change the player's position.
         loc.setZ(loc.getBlockZ() + 5);
         // Gets the block at the new location.
         Block b = loc.getBlock();
+
         // Sets the block to type id 1 (stone).
         b.setType(Material.STONE);
+    }
+
+    @EventHandler
+    public void onLogin(PlayerLoginEvent event) {
+        this.player = event.getPlayer();
+        getLogger().info("onLogin called with player: " + this.player.getDisplayName());
     }
 }

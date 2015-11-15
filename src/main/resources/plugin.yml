@@ -2,6 +2,6 @@ name: DataVisualizer
 main: dk.topdanmark.minecraft.DataVisualizer
 version: 0.9
 commands:
-   basic:
+   sheep:
       description: This is a demo command.
       usage: /<command> [player]
